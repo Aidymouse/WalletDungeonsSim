@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+  <script type="module">
+    import { WalletDungeon } from "./walletDungeons.js";
+		import { stringToCoords } from "./helper.js"
+
+    window.generateWalletDungeon = () => {
+      const d = new WalletDungeon(8);
+      drawDungeon(d);
+    };
+
+    const drawDungeon = (d) => {
+      const c = drawn.getContext("2d");
+
+      const minX = Object.keys(d.dungeon).reduce( (min, key) => Math.min(stringToCoords(key).x, min), 0,);
+      const maxX = Object.keys(d.dungeon).reduce( (min, key) => Math.max(stringToCoords(key).x, min), -Infinity,);
+      const minY = Object.keys(d.dungeon).reduce( (min, key) => Math.min(stringToCoords(key).y, min), 0,);
+      const maxY = Object.keys(d.dungeon).reduce( (min, key) => Math.max(stringToCoords(key).y, min), -Infinity,);
+
+			const blockSize = 50
+
+			c.fillStyle = "white";
+			c.fillRect(0, 0, 1000, 1000);
+
+			c.save()
+			c.translate(-minX * blockSize + blockSize, -minY * blockSize + blockSize)
+
+
+			c.save()
+
+			c.scale(blockSize, blockSize)
+			c.textAlign = "center"
+			c.textBaseline = "middle"
+			c.font = "0.6pt Arial"
+
+			c.fillStyle = "red";
+			for (let row=maxY; row>=minY; row--) {
+				for (let col=minX; col <= maxX; col++) {
+					const room = d.room(col, row)
+					if (room) {
+						room.drawOnCanvas(c)
+					} else {
+					}
+					
+				}
+			}
+			c.restore()
+
+			// 0, 0 reference point
+			/*
+			c.fillStyle = "blue";
+			c.beginPath();
+			c.arc(0, 0, 5, 0, 2 * Math.PI)
+			c.fill();
+			*/
+
+			c.restore()
+
+    };
+
+		window.onload = () => window.generateWalletDungeon()
+
+  </script>
+  <link rel="stylesheet" href="main.css" />
+
+  <body>
+    <main>
+      <button onClick="generateWalletDungeon()">
+        Make me a wallet dungeon!
+      </button>
+      <section>
+        <canvas id="drawn" width="500" height="500"></canvas>
+      </section>
+    </main>
+  </body>
+</html>
