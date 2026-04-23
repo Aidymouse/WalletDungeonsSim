@@ -8,6 +8,13 @@ export class SixRoom extends Room {
 		super()
 	}
 
+	clone() {
+		const newRoom = new SixRoom();
+		newRoom.x = this.x;
+		newRoom.y = this.y;
+		return newRoom;
+	}
+
 	// TODO: prospectively allowed locations include those one away from an empty space
 	getValue() {
 		return 6;

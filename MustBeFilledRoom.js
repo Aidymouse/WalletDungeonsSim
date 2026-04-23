@@ -5,6 +5,13 @@ export class MustBeFilledRoom extends Room {
 	constructor() { super() }
 	getDrawChar() { return 'O'}
 
+	clone() {
+		const newRoom = new MustBeFilledRoom();
+		newRoom.x = this.x;
+		newRoom.y = this.y;
+		return newRoom;
+	}
+
 	drawOnCanvas(c) {
 		c.save()
 		c.fillStyle = "turquoise"

@@ -8,6 +8,14 @@ export class FiveRoom extends Room {
 		super()
 	}
 
+	clone() {
+		const newRoom = new FiveRoom();
+		newRoom.x = this.x;
+		newRoom.y = this.y;
+		newRoom.height = this.height
+		return newRoom;
+	}
+
 	// TODO: prospectively allowed locations include those one away from an empty space
 	getValue() { return 5; }
 	getDrawChar() { return '5'; }

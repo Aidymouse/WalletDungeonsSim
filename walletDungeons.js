@@ -35,14 +35,22 @@ export class WalletDungeon {
   dungeon;
 
   constructor(num_dice, dungeonObj) {
+    this.dungeon = {};
 		if (dungeonObj) {
-			this.dungeon = structuredClone(dungeonObj)
+			this.cloneDungeon(dungeonObj)
 		} else {
-    	this.dungeon = {};
     	this.generate(num_dice);
 		}	
 
   }
+
+	cloneDungeon(dungeonObj) {
+		for (const [coords, room] of Object.entries(dungeonObj)) {
+			if (room) {
+				this.dungeon[coords] = room.clone()
+			}
+		}
+	}
 
 
   setRoom(room, x, y) {
@@ -282,19 +290,18 @@ getEmptyNeighbours = (x, y) => {
           continue;
         } 
 
-				let affectStack = []
+				dungeonCopy.setRoom(room, replacedRoom.x, replacedRoom.y)
+				const propagate_res = room.propagateChanges(dungeonCopy)
 
-				const affectedRooms = replacedRoom.getAffectedRooms().map(affectKey => this.room(affectKey)).filter(r => r !== undefined && r.type !== 'edge')
-				console.log("Affected rooms", affectedRooms)
+				// TODO: if anything in the propagate res is false, reject this placement and choose another
+				// Otherwise, clone the dungeonCopy into the current dungeon - this selection went through!
 
-				affectStack = affectStack.concat(affectedRooms)
-
-				// I think i can get this working with a basically recursive iteration on affected blocks to see if they're all good with the new map
-				while (affectStack > 0) {
-					const affected = affectStack.pop()
+				console.log("Copy", dungeonCopy.dungeon)
+				console.log(propagate_res)
+				if (!propagate_res.find(pr => pr.valid === false)) {
+					this.cloneDungeon(dungeonCopy.dungeon)
+					placed = true
 				}
-				
-				
 
       }
 
