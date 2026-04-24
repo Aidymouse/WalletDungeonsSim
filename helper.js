@@ -8,3 +8,10 @@ export const stringToCoords = (s) => ({
   x: parseInt(s.split(":")[0]),
   y: parseInt(s.split(":")[1]),
 });
+
+export const negateDir = (dir) => {
+	if (dir === 'up') { return 'down' }
+	if (dir === 'down') { return 'up' }
+	if (dir === 'left') { return 'right' }
+	if (dir === 'right') { return 'left' }
+}

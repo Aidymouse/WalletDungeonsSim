@@ -26,5 +26,6 @@ export class EdgeRoom extends Room {
 		return clone
 	}
 
+	okayWithNeighbours(neighbours) { return true }
 
 }

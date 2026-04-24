@@ -41,4 +41,6 @@ export class MustBeFilledRoom extends Room {
 			// Same check as above
 		}
 	}
+
+	okayWithNeighbours(neighbours) { return true }
 }

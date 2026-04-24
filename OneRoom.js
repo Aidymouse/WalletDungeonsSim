@@ -5,8 +5,8 @@ import { BlockedRoom } from './BlockedRoom.js'
 export class OneRoom extends Room {
 	type = "room";
 
-	constructor() {
-		super()
+	constructor(X, Y) {
+		super(X, Y)
 	}
 
 	clone() {
@@ -35,37 +35,35 @@ export class OneRoom extends Room {
 	}
 
 
-	propagateChanges(dungeon, prop_results = []) {
-			if (!this.checkConstraints(dungeon, this.x, this.y)) {
-				prop_results.push({room: this, valid: false})
-				return prop_results;
-			}
+	
+	okayWithNeighbours(newNeighbours) {
 
-			const neighbours = Object.values(dungeon.getNeighbours(this.x, this.y))
+		if (Object.values(newNeighbours).filter(n => n.room?.type === RoomType.ROOM).length > 1) { return false }
 
-			// TODO: check if neighbours have changed since last propagation, and return straight away if so
+		// If there aren't enough MUSTBEFILLED neighbours then don't allow
+		if (
+			Object.values(newNeighbours).filter(n => n.room?.type === RoomType.MUSTBEFILLED).length < 1 
+			&& Object.values(newNeighbours).filter(n => n.room?.type === RoomType.ROOM).length === 0) { return false }
 
-			// Check if anyone next to use must be filled and is now blocked
-			for (const neighbour of neighbours) {
-				if (neighbour.room.type === 'mustBeFilled' || neighbour.room.type === 'edge' || neighbour.room === undefined) {
-					dungeon.setRoom(new BlockedRoom(), neighbour.x, neighbour.y)
-				}
-			}
-
-
-			// Turn any empty neighbours into blocked
-			// TODO:
-
-			// Propagate changes to filled neighbours
-			const newNeighbours = dungeon.neighboursNotOfType(this.x, this.y, [undefined])
-			for (const neighbour of newNeighbours) {
-				console.log('Neighbour', neighbour)
-				prop_results = prop_results.concat(neighbour.room.propagateChanges(dungeon, prop_results))
-			}
-
-			prop_results.push({room: this, valid: true})
-			return prop_results
+		return true
 	}
 
+
+	// Assuming x, y, is a valid position, what rooms next to me will need to change?
+	// @returns (room with X and Y updated)[]
+	getChangedAdjacents(neighbours, x, y) {
+
+		let changedAdjacents = {}
+		for (const neighbourKey of ['up', 'down', 'left', 'right']) {
+			const neighbour = neighbours[neighbourKey]
+			if ([undefined, RoomType.EDGE, RoomType.MUSTBEFILLED, RoomType.CANBEFILLED].includes(neighbour.room?.type)) {
+				changedAdjacents[neighbourKey] = {...neighbour, room: new BlockedRoom(neighbour.x, neighbour.y)}
+			}
+			
+		}
+
+		return changedAdjacents
+			
+	}
 
 }

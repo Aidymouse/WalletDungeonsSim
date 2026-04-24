@@ -31,4 +31,8 @@ export class SixRoom extends Room {
 		c.restore()
 	}
 
+	okayWithNeighbours() {
+		return true
+	}
+
 }

@@ -3,7 +3,7 @@ export class Room {
 	y=undefined
 
 	type = "NOT_IMPLEMENTED";
-	constructor() {}
+	constructor(X, Y) { this.x = X; this.y = Y;}
 	checkConstraints() {}
 	getValue() {}
 	setPosition(X, Y) { this.x = X; this.y = Y; }
@@ -11,26 +11,15 @@ export class Room {
 
 	drawOnCanvas(ctx) { ctx.fillRect(this.x, this.y, 1, 1) }
 
-	getAffectedRooms() { return [] }
-
-	propagateChanges(dungeon, prop_results=[]) {
-		// Check self
-		// If we're now in an invalid state, return an indication
-		// Otherwise update ourself, possibly changeing neighoburs, then propagate changes out to all neighbours that it matters to
-
-		return {room: this, valid: true}
- 	}
-
 	clone() { 
 		throw Error("Clone Not Implemented")
 	}
 
-	placeSelfAt(dungeon, x, y) {
-		dungeon.setRoom(this, x, y);
-	}
+	getChangedAdjacents() { return {} }
 
-	okayToReplaceWith(dungeon, replacementRoom) {
-		// Am I okay to be replaced with the incoming room?
+	// @param neighbours - {up, down, left, right}
+	okayWithNeighbours(neighbours) {
+		throw Error("Okay with neighbours not implemented")
 	}
 
 }

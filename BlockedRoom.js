@@ -15,4 +15,6 @@ export class BlockedRoom extends Room {
 		clone.x = this.x; clone.y = this.y;
 		return clone;
 	}
+
+	okayWithNeighbours(neighbours) { return true }
 }

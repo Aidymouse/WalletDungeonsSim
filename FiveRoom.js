@@ -53,4 +53,17 @@ export class FiveRoom extends Room {
 		return {room: this, valid: true}
 	}
 
+	okayWithNeighbours(neighbours) {
+
+		const neighbourRooms = Object.values(neighbours).map(n => n.room).filter(r => r !== undefined)
+
+		if (neighbourRooms.filter(r => [RoomType.ROOM, RoomType.MUSTBEFILLED].includes(r.type)).length < 2) { return false }
+		
+		return true
+
+		// If we don't have at least two potential neighbours (either filled of must be filled) then we're not chill	
+
+		return true
+	}
+
 }
