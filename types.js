@@ -1,4 +1,7 @@
 export const RoomType = {
+	ROOM: 'room',
+	EDGE: 'edge',
 	BLOCKED: 'blocked',
-	MUSTBEFILLED: 'mustBeFilled'
+	MUSTBEFILLED: 'mustBeFilled',
+	CANBEFILLED: 'canBeFilled'
 }

@@ -19,5 +19,12 @@ export class EdgeRoom extends Room {
 		c.restore()
 	}
 
+	clone() {
+		const clone = new EdgeRoom()
+		clone.x = this.x;
+		clone.y = this.y;
+		return clone
+	}
+
 
 }

@@ -6,7 +6,10 @@
 
     window.generateWalletDungeon = () => {
       const d = new WalletDungeon(8);
-      drawDungeon(d);
+
+			showHistories(d);
+	
+      //drawDungeon(d);
     };
 
     const drawDungeon = (d) => {
@@ -58,6 +61,11 @@
 
     };
 
+
+		const showHistories = (walletDungeon) => {
+			histories.innerHTML = walletDungeon.history.map(h => h.replace(/\n/gm, "<br/>")).join("<br/><br/>");
+		};
+	
 		window.onload = () => window.generateWalletDungeon()
 
   </script>
@@ -68,6 +76,8 @@
       <button onClick="generateWalletDungeon()">
         Make me a wallet dungeon!
       </button>
+      <section id="histories">
+      </section>
       <section>
         <canvas id="drawn" width="500" height="500"></canvas>
       </section>

@@ -7,6 +7,7 @@
 //
 // type WalletDungeon = { [coords: number]: Room };
 
+import { RoomType } from './types.js'
 import { Room } from "./Room.js";
 import { EdgeRoom } from "./EdgeRoom.js";
 import { OneRoom } from "./OneRoom.js";
@@ -33,6 +34,8 @@ const decodeToCoordsObj = (x, y) => {
 
 export class WalletDungeon {
   dungeon;
+
+	history = [];
 
   constructor(num_dice, dungeonObj) {
     this.dungeon = {};
@@ -61,7 +64,7 @@ export class WalletDungeon {
     room.setPosition(coords.x, coords.y);
     this.dungeon[coordsToString(coords)] = room;
 
-    if (room.type !== "edge") {
+    if (![RoomType.BLOCKED, RoomType.EDGE].includes(room.type)) {
       const emptyNeighboursOfAdded = Object.values(
         this.getNeighbours(coords.x, coords.y),
       ).filter((n) => n.room === undefined);
@@ -87,7 +90,7 @@ room(x, y) {
 				return this.dungeon[coordsToString(x)];
 		}
 
-		console.log("Unknown how to get a room from", x, y);
+		throw Error(`Unknown how to get a room from ${x}, ${y}`)
 
 		return undefined;
 }
@@ -101,129 +104,37 @@ getNeighbours(x, y) {
 		};
 }
 
-getEmptyNeighbours = (x, y) => {
-		return Object.values(this.getNeighbours(x, y)).filter( (n) => n.room === undefined || n.room.type === "edge");
-}
+	neighboursOfType(x, y, ts) { return Object.values(this.getNeighbours(x, y)).filter(n => (n.room === undefined && ts.includes(undefined)) || ts.includes(n.room.type)) }
+	neighboursNotOfType(x, y, ts) { return Object.values(this.getNeighbours(x, y)).filter(n => (n.room !== undefined && ts.includes(undefined)) && !ts.includes(n.room.type)) }
 
-
-	getFilledNeighbours(x, y) {
-    return Object.values(this.getNeighbours(x, y)).filter(
-      (n) => n.room !== undefined && n.room.type !== "edge",
-    );
-	}
 
   getEdges() {
-    let edgeKeys = {};
-    for (const key of Object.keys(this.dungeon)) {
-      if ([BLOCKED.type].includes(this.room(key).type)) {
-        continue;
-      }
-      const coords = stringToCoords(key);
-      const neighbours = this.getNeighbours(coords.x, coords.y);
+    return Object.values(this.dungeon).filter( (r) => r.type === RoomType.EDGE);
 
-      if (neighbours.up === undefined) {
-        edgeKeys[`${coords.x}:${coords.y + 1}`] = true;
-      }
-      if (neighbours.down === undefined) {
-        edgeKeys[`${coords.x}:${coords.y - 1}`] = true;
-      }
-      if (neighbours.left === undefined) {
-        edgeKeys[`${coords.x - 1}:${coords.y}`] = true;
-      }
-      if (neighbours.right === undefined) {
-        edgeKeys[`${coords.x + 1}:${coords.y}`] = true;
-      }
-    }
-
-    return Object.keys(edgeKeys).map((coordKey) => ({
-      x: stringToCoords(coordKey).x,
-      y: stringToCoords(coordKey).y,
-      type: "edge",
-    }));
   }
 
   getMustBeFilled() {
-    return Object.values(this.dungeon).filter(
-      (r) => r.type === MUSTBEFILLED.type,
-    );
+    return Object.values(this.dungeon).filter( (r) => r.type === RoomType.MUSTBEFILLED);
   }
 
+	getCanBeFilled() {
+	}
+
+	roomsOfType(t) { return Object.values(this.dungeon).filter(r => r.type === t) }
+	roomsOfTypes(ts) { return Object.values(this.dungeon).filter(r => ts.incudes(r.type)) }
+
+	// TODO: at some point each placement should have weights. Or each room should be able to specify it's own weights!
   getValidPlacements() {
-    return this.getEdges().concat(this.getMustBeFilled());
-  }
-
-  /** CHECKERS **/
-
-  // Gets the fitness of a room placement if it has provided neighbours
-  // Returns [eligible, fitnessScore, newLayout]
-  getFitness(room, neighbours) {
-    const prospectiveLocations = this.getValidPlacements().filter((r) =>
-      this.fitsConstraints(room, r.x, r.y),
-    );
-
-    for (place of prospectiveLocations) {
-    }
-
-    console.log(prospectiveLocations);
-
-    switch (room.roll) {
-      case -1:
-        return false;
-      case 1: {
-        if (
-          Object.values(neighbours).filter((n) => n !== undefined).length > 1
-        ) {
-          return false;
-        }
-        if (
-          Object.values(neighbours).filter((n) => n !== undefined).length === 1
-        ) {
-          return true;
-        }
-        return false;
-      }
-    }
-  }
-
-  /* Can this room go into the spot at coord X, Y ? */
-  canGoHere(room, x, y) {
-    if (this.room(x, y)) {
-      if (this.room(x, y).type === BLOCKED.type) {
-        return [false, CantGoHere.BLOCKED];
-      } else if (this.room(x, y).type === MUSTBEFILLED.type) {
-        return [false, CantGoHere.OCCUPIED];
-      } else {
-        return [false, CantGoHere.OCCUPIED];
-      }
-    }
-    if (this.room(x, y)) {
-      return [false, CantGoHere.OCCUPIED];
-    }
-
-    switch (room.roll) {
-      case 1: {
-        if (
-          Object.values(this.getNeighbours(room.x, room.y)).filter(
-            (r) => r !== undefined,
-          ).length > 1
-        ) {
-          return [false, CantGoHere.FAILS_CONSTRAINTS];
-        }
-      }
-    }
-
-    return [true, CanGoHere.COULD];
+    return this.roomsOfTypes([RoomType.MUSTBEFILLED, RoomType.CANBEFILLED, RoomType.EDGE])
   }
 
   /** GENERATOR **/
-
   generate(num_dice) {
     /** Roll dice **/
     let rolls = [];
     for (let i = 0; i < num_dice; i++) {
       rolls.push(rand(1, 6));
     }
-    console.log("Rolls", rolls);
 
     /** Turn rolls into initial rooms **/
     let rooms = [];
@@ -258,16 +169,24 @@ getEmptyNeighbours = (x, y) => {
     for (let hallY = 0; rooms.at(-1)?.getValue() === 6; hallY++) {
       this.setRoom(rooms.pop(), 0, hallY);
     }
+		this.history.push(this.draw())
 
     // Tower
     if (rooms.at(-1)?.getValue() === 5) {
-      let fiveRoom = rooms.pop();
-      this.setRoom(fiveRoom, 1, 0);
-      for (const empty of this.getEmptyNeighbours(1, 0)) {
+			const fiveRoom = rooms.pop();
+
+			let fivePlacement = popRandom(this.roomsOfType(RoomType.EDGE)) ?? {x: 0, y: 0}
+
+      this.setRoom(fiveRoom, fivePlacement.x, fivePlacement.y);
+
+      for (const empty of this.neighboursOfType(fiveRoom.x, fiveRoom.y, [undefined, RoomType.EDGE])) {
         this.setRoom(new MustBeFilledRoom(), empty.x, empty.y);
       }
+
+			this.history.push(this.draw())
     }
 
+		// Start adding rooms one by one
     while (rooms.length > 0) {
       const room = rooms.pop();
 
@@ -305,6 +224,8 @@ getEmptyNeighbours = (x, y) => {
 
       }
 
+			this.history.push(this.draw())
+
       if (placed === false) {
         console.log(`Couldn't find anywhere to place`, room);
         //throw new Error(`Couldn't find anywhere to place ${room}`)
@@ -314,6 +235,7 @@ getEmptyNeighbours = (x, y) => {
     console.log("Dungeon", this.dungeon);
   }
 
+	/* @returns string - Dungeon string */
   draw() {
     const minX = Object.keys(this.dungeon).reduce(
       (min, key) => Math.min(stringToCoords(key).x, min),
@@ -332,6 +254,7 @@ getEmptyNeighbours = (x, y) => {
       -Infinity,
     );
 
+		let rowStrings = [];
     for (let row = maxY; row >= minY; row--) {
       let rowString = "";
       for (let col = minX; col <= maxX; col++) {
@@ -343,7 +266,11 @@ getEmptyNeighbours = (x, y) => {
           rowString += `-`;
         }
       }
-      console.log(rowString);
+			rowStrings.push(rowString)
     }
+
+		const dungeonString = rowStrings.join("\n");
+		console.log(dungeonString);
+		return dungeonString;
   }
 }

@@ -7,4 +7,12 @@ export class BlockedRoom extends Room {
 	constructor() {
 		super()
 	}
+
+	getDrawChar() { return 'X' }
+
+	clone() {
+		const clone = new BlockedRoom()
+		clone.x = this.x; clone.y = this.y;
+		return clone;
+	}
 }

@@ -1,3 +1,9 @@
 body {
 	background-color: black;
+	color: white;
+}
+
+#histories {
+	font-family: Courier New;
+	font-size: 36pt;
 }

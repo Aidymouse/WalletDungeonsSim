@@ -1,3 +1,4 @@
+import { RoomType } from './types.js'
 import { Room } from './Room.js'
 import { BlockedRoom } from './BlockedRoom.js'
 
@@ -15,15 +16,6 @@ export class OneRoom extends Room {
 		return newRoom;
 	}
 
-
-	// TODO: prospectively allowed locations include those one away from an empty space
-	checkConstraints(dungeon, x, y) {
-		const filledNeighbours = dungeon.getFilledNeighbours(x, y)
-
-		if (filledNeighbours.length !== 1) { return false }
-		return true;
-	}
-
 	getValue() { return 1; }
 	getDrawChar() { return '1' }
 
@@ -33,6 +25,15 @@ export class OneRoom extends Room {
 		c.fillRect(this.x, this.y, 1, 1)
 		c.restore()
 	}
+
+
+	// TODO: prospectively allowed locations include those one away from an empty space
+	checkConstraints(dungeon, x, y) {
+		const filledNeighbours = dungeon.neighboursOfType(x, y, [RoomType.ROOM])
+		if (filledNeighbours.length !== 1) { return false }
+		return true;
+	}
+
 
 	propagateChanges(dungeon, prop_results = []) {
 			if (!this.checkConstraints(dungeon, this.x, this.y)) {
@@ -51,11 +52,12 @@ export class OneRoom extends Room {
 				}
 			}
 
+
 			// Turn any empty neighbours into blocked
 			// TODO:
 
 			// Propagate changes to filled neighbours
-			const newNeighbours = dungeon.getFilledNeighbours(this.x, this.y)
+			const newNeighbours = dungeon.neighboursNotOfType(this.x, this.y, [undefined])
 			for (const neighbour of newNeighbours) {
 				console.log('Neighbour', neighbour)
 				prop_results = prop_results.concat(neighbour.room.propagateChanges(dungeon, prop_results))

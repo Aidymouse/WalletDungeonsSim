@@ -21,6 +21,7 @@ export class Room {
 		return {room: this, valid: true}
  	}
 
-	clone() {
+	clone() { 
+		throw Error("Clone Not Implemented")
 	}
 }
