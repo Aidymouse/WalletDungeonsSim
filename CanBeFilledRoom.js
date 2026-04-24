@@ -4,6 +4,10 @@ import { Room } from './Room.js'
 export class CanBeFilledRoom extends Room {
 	type = RoomType.CANBEFILLED;
 
+	constructor(X, Y) {
+		super(X, Y)
+	}
+
 	getDrawChar() {
 		return "^"
 	}
@@ -14,4 +18,6 @@ export class CanBeFilledRoom extends Room {
 		c.y = this.y;
 		return c;
 	}
+
+	okayWithNeighbours(neighbours) { return true }
 }

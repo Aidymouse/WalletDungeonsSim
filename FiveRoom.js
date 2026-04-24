@@ -34,25 +34,6 @@ export class FiveRoom extends Room {
 	}
 
 
-	propagateChanges(dungeon) {
-		// Am I in an invalid state?
-		// Five MUST be connected to two, but can be connected to up to four
-		// So it basically isn't possible.
-
-		// Update neighbours
-		// A rather big decision to make is do we make all changes first, then propagate? 
-
-		if (dungeon.neighboursOfType(this.x, this.y, [RoomType.ROOM]).length >= 2) {
-			const mustBeFilledNeighbours = dungeon.neighboursOfType(this.x, this.y, [RoomType.MUSTBEFILLED])
-			for (const n of mustBeFilledNeighbours) {
-				dungeon.setRoom(new CanBeFilledRoom(), n.x, n.y);
-				prop_results = prop_results.concat(dungeon.room(n.x, n.y).propagateChanges(dungeon, prop_results));
-			}
-		}
-
-		return {room: this, valid: true}
-	}
-
 	okayWithNeighbours(neighbours) {
 
 		const neighbourRooms = Object.values(neighbours).map(n => n.room).filter(r => r !== undefined)
@@ -64,6 +45,19 @@ export class FiveRoom extends Room {
 		// If we don't have at least two potential neighbours (either filled of must be filled) then we're not chill	
 
 		return true
+	}
+
+	getChangedAdjacents(neighbours) {
+		const ns = Object.values(neighbours)
+
+		let changed = {}
+		if (ns.filter(n => n.room?.type === RoomType.ROOM).length >= 2) {
+			for (const [nKey, n] of Object.entries(neighbours)) {
+				if (n.room?.type === RoomType.MUSTBEFILLED) { changed[nKey] = { x: n.x, y: n.y, room: new CanBeFilledRoom(n.x, n.y)} }
+			}
+		}
+		
+		return changed
 	}
 
 }

@@ -1,9 +1,13 @@
 import { RoomType } from './types.js'
 import { Room } from './Room.js'
+import { BlockedRoom } from './BlockedRoom.js'
+import { CanBeFilledRoom } from './CanBeFilledRoom.js'
 
 export class TwoRoom extends Room {
 
 	type = RoomType.ROOM
+
+	getValue() { return 2 }
 
 	clone() {
 		const c = new TwoRoom();
@@ -13,27 +17,37 @@ export class TwoRoom extends Room {
 
 	getDrawChar() { return '2' }
 
-	checkConstraints(dungeon) {
-		if (dungeon.neighboursOfType(this.x, this.y, [RoomType.ROOM]).length > 2) {
-			return false
-		}
+	okayWithNeighbours(newNeighbours) {
+		const roomNeighbours = Object.values(newNeighbours).filter(n => n.room?.type === RoomType.ROOM)
+		const potentialSpaces = Object.values(newNeighbours).filter(n => [RoomType.MUSTBEFILLED, RoomType.CANBEFILLED, undefined, RoomType.EDGE].includes(n.room?.type))
+
+		if (roomNeighbours.length > 2) { return false }
+
+		if (roomNeighbours.length + potentialSpaces.length < 2) { return false }
 
 		return true
 	}
 
-	propagateChanges(dungeon, prop_results=[]) {
-		if (!this.checkConstraints(dungeon)) {
-			return prop_results.concat([{room: this, valid: false}}]
-		}
+	getChangedAdjacents(neighbours, x, y) {
+		const roomNeighbours = Object.values(neighbours).filter(n => n.room?.type === RoomType.ROOM)
 
-		if (dungeon.neighboursOfType(this.x, this.y, [RoomType.ROOM]).length === 2) {
-			for (const neighbour of dungeon.neighboursOfType(this.x, this.y, [RoomType.MUSTBEFILLED])) {
+		let changed = {}
 
-			// I forsee trouble with wantanly changing rooms without checking in with them first.
-		}
+		if (roomNeighbours.length == 2) {
+			for (const [nKey, n] of Object.entries(neighbours)) {
+				if ([undefined, RoomType.EDGE, RoomType.MUSTBEFILLED, RoomType.CANBEFILLED].includes(n.room?.type)) {
+					changed[nKey] = {x: n.x, y: n.y, room: new BlockedRoom(n.x, n.y)}
+				}
+			}
 		} else {
+			for (const [nKey, n] of Object.entries(neighbours)) {
+				if ([undefined, RoomType.EDGE, RoomType.MUSTBEFILLED, RoomType.CANBEFILLED].includes(n.room?.type)) {
+					changed[nKey] = {x: n.x, y: n.y, room: new CanBeFilledRoom(n.x, n.y)}
+				}
+			}
 		}
-		
+
+		return changed
 	}
 
 }

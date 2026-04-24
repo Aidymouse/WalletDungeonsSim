@@ -2,7 +2,7 @@ import { Room } from './Room.js'
 
 export class MustBeFilledRoom extends Room {
 	type = 'mustBeFilled'
-	constructor() { super() }
+	constructor(x, y) { super(x, y) }
 	getDrawChar() { return 'O'}
 
 	clone() {

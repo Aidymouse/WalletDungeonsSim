@@ -15,3 +15,11 @@ export const negateDir = (dir) => {
 	if (dir === 'left') { return 'right' }
 	if (dir === 'right') { return 'left' }
 }
+
+export const haveNeighboursChanged = (n1, n2) => {
+	for (const key of ['up', 'down', 'left', 'right']) {
+		if (n1[key].room?.type !== n2[key].room?.type) { return true }
+	}
+
+	return false
+}

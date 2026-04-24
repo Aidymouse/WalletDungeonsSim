@@ -11,11 +11,12 @@ import { RoomType } from './types.js'
 import { Room } from "./Room.js";
 import { EdgeRoom } from "./EdgeRoom.js";
 import { OneRoom } from "./OneRoom.js";
+import { TwoRoom } from "./TwoRoom.js";
 import { FiveRoom } from "./FiveRoom.js";
 import { SixRoom } from "./SixRoom.js";
 import { MustBeFilledRoom } from "./MustBeFilledRoom.js";
 
-import { rand, negateDir, popRandom, coordsToString, stringToCoords } from './helper.js'
+import { rand,  haveNeighboursChanged, negateDir, popRandom, coordsToString, stringToCoords } from './helper.js'
 
 const filterChildren = (ob, filt) =>
   Object.fromEntries(Object.entries(ob).filter(([k, v]) => filt(v)));
@@ -65,9 +66,8 @@ export class WalletDungeon {
     this.dungeon[coordsToString(coords)] = room;
 
     if (![RoomType.BLOCKED, RoomType.EDGE].includes(room.type)) {
-      const emptyNeighboursOfAdded = Object.values(
-        this.getNeighbours(coords.x, coords.y),
-      ).filter((n) => n.room === undefined);
+			
+      const emptyNeighboursOfAdded =  this.neighboursOfType(coords.x, coords.y, [undefined]);
 
       for (const emptyNeighbour of emptyNeighboursOfAdded) {
         this.setRoom(new EdgeRoom(), emptyNeighbour.x, emptyNeighbour.y);
@@ -128,31 +128,44 @@ getNeighbours(x, y) {
     return this.roomsOfTypes([RoomType.MUSTBEFILLED, RoomType.CANBEFILLED, RoomType.EDGE])
   }
 
-	isItOkayToPlace(room, x, y, withNeighbours) {
+
+	// ChangeRecord could be - when you last looked at this room, I had these neighbours and I was this type. Let's it be more live than looking at the actual dungeon
+	isItOkayToPlace(room, x, y, withNeighbours, changeRecord = {}) {
+
+		// TODO: not working quite right
+		let record = changeRecord[`${x}:${y}`]
+		if (!record) {
+			changeRecord[`${x}:${y}`] = { room: this.room(x, y), neighbours: this.getNeighbours(x, y) }
+			record = changeRecord[`${x}:${y}`]
+		}
+
+		if (!haveNeighboursChanged(record.neighbours, withNeighbours) && room.type === record.room.type) {
+			return { valid: true, placements: [] }
+		}
+
+		changeRecord[`${x}:${y}`] = { room, neighbours: withNeighbours }
+
+		console.log("Can I place", room, `at ${x}, ${y}?`)
 
 		if (!room.okayWithNeighbours(withNeighbours)) { return {valid: false}; }
 
 		let placements = []
 
-		// Make sure each of my neighbours is chill with ME
-		for (const [nKey, neighbour] of Object.entries(this.getNeighbours(x, y))) {
-			if (neighbour.room === undefined) { continue }
-			const neighbourNeighbours = this.getNeighbours(neighbour.x, neighbour.y)
-			neighbourNeighbours[negateDir(nKey)].room = room
-
-			if (!neighbour.room.okayWithNeighbours(neighbourNeighbours)) {
-				return {valid: false}
-			}
-		}
-
-		// Since I'm being placed here, what will need to change
+		// Am I going to change any of the nearby neighbours?
 		const changedNeighbours = room.getChangedAdjacents(withNeighbours, x, y)
+		console.log(changedNeighbours)
 
-		for (const [dir, changedNeighbour] of Object.entries(changedNeighbours)) {
-			const neighboursOfChanged = this.getNeighbours(changedNeighbour.x, changedNeighbour.y)
-			neighboursOfChanged[negateDir(dir)] = changedNeighbour
-			const placeRes = this.isItOkayToPlace(changedNeighbour.room, changedNeighbour.x, changedNeighbour.y, neighboursOfChanged)
-			if (!placeRes.valid) { return {valid: false} }
+		for (let [dir, n] of Object.entries(withNeighbours)) {
+			if (n.room === undefined) { continue }
+			if (changedNeighbours[dir]) { n = changedNeighbours[dir] }
+			const neighboursN = this.getNeighbours(n.x, n.y)
+			neighboursN[negateDir(dir)] = room
+			const placeRes = this.isItOkayToPlace(n.room, n.x, n.y, neighboursN, changeRecord)
+			if (!placeRes.valid) { 
+				// TODO: special case, if we're replacing a MUST BE PLACED with a CAN BE PLACED, we can reject that one change without rejecting the entire placement
+				//if this.room(changedNeigher.x, n.y)?.type === RoomType.MUSTBE
+				return {valid: false} 
+			}
 			placements = placements.concat(placeRes.placements)
 			
 		}
@@ -174,6 +187,8 @@ getNeighbours(x, y) {
 
     /** Turn rolls into initial rooms **/
     let rooms = [];
+		let sixRooms = [];
+		let fiveRoom = null;
 
     for (let i = 0; i < rolls.length; i++) {
       const roll = rolls[i];
@@ -182,34 +197,36 @@ getNeighbours(x, y) {
         case 1:
           rooms.push(new OneRoom());
           break;
+        case 2:
+          rooms.push(new TwoRoom());
+          break;
         case 5:
-          if (rooms.find((r) => r.getValue() === 5)) {
-            rooms.find((r) => r.getValue() === 5).addToTower();
+          if (fiveRoom !== null) {
+						fiveRoom.addToTower();
           } else {
-            rooms.push(new FiveRoom());
+						fiveRoom = new FiveRoom();
           }
           break;
         case 6:
-          rooms.push(new SixRoom());
+          sixRooms.push(new SixRoom());
           break;
       }
     }
 
-    rooms.sort((r1, r2) => r1.getValue() - r2.getValue());
+    //rooms.sort((r1, r2) => r1.getValue() - r2.getValue());
 
-    console.log("Rooms", rooms);
+    console.log("Rooms", rooms, sixRooms, fiveRoom);
 
     /** Put the rooms togethers **/
 
     // Hall
-    for (let hallY = 0; rooms.at(-1)?.getValue() === 6; hallY++) {
-      this.setRoom(rooms.pop(), 0, hallY);
+    for (const [hallY, room] of sixRooms.entries()) {
+      this.setRoom(room, 0, parseInt(hallY));
     }
 		this.history.push(this.draw())
 
     // Tower
-    if (rooms.at(-1)?.getValue() === 5) {
-			const fiveRoom = rooms.pop();
+    if (fiveRoom !== null) {
 
 			let fivePlacement = popRandom(this.roomsOfType(RoomType.EDGE)) ?? {x: 0, y: 0}
 
@@ -228,17 +245,36 @@ getNeighbours(x, y) {
 
       console.log("Trying to place", room);
 
-			const validPlacements = this.getValidPlacements().map(r => `${r.x}:${r.y}`)
-			const placeKeys = validPlacements
+			const firstChoicePlacements = this.roomsOfType(RoomType.MUSTBEFILLED).map(r => `${r.x}:${r.y}`)
+			let secondChoicePlacements = this.roomsOfType(RoomType.CANBEFILLED).map(r => `${r.x}:${r.y}`)
+			let thirdChoicePlacements = this.roomsOfType(RoomType.EDGE).map(r => `${r.x}:${r.y}`)
+
+			//const validPlacements = this.getValidPlacements().map(r => `${r.x}:${r.y}`)
+
+			let placeKeys = firstChoicePlacements
 
       let placed = false;
       while (placeKeys.length > 0 && placed === false) {
         const placeKey = popRandom(placeKeys);
+
+				if (placeKeys.length === 0) {
+					if (secondChoicePlacements !== null) {
+						console.log("Trying second choice")
+						placeKeys = [...secondChoicePlacements]
+						secondChoicePlacements = null
+					} else if (thirdChoicePlacements !== null) {
+						console.log("Trying third choice")
+						placeKeys = [...thirdChoicePlacements]
+						thirdChoicePlacements = null
+					}
+				}
+
         const replacedRoom = this.room(placeKey);
 				console.log("Room to replace", replacedRoom)
 
 				room.x = replacedRoom.x
 				room.y = replacedRoom.y
+				debugger
 				const placeResult = this.isItOkayToPlace(
 					room,
 					replacedRoom.x,
@@ -273,6 +309,7 @@ getNeighbours(x, y) {
 
 	/* @returns string - Dungeon string */
   draw(drawCoords = true) {
+		if (Object.keys(this.dungeon).length === 0) { return "" }
     const minX = Object.keys(this.dungeon).reduce(
       (min, key) => Math.min(stringToCoords(key).x, min),
       0,

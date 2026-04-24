@@ -1,6 +1,7 @@
 import { RoomType } from './types.js'
 import { Room } from './Room.js'
 import { BlockedRoom } from './BlockedRoom.js'
+import { MustBeFilledRoom } from './MustBeFilledRoom.js'
 
 export class OneRoom extends Room {
 	type = "room";
@@ -52,14 +53,28 @@ export class OneRoom extends Room {
 	// Assuming x, y, is a valid position, what rooms next to me will need to change?
 	// @returns (room with X and Y updated)[]
 	getChangedAdjacents(neighbours, x, y) {
+		const neighbourRooms = Object.values(neighbours)
 
 		let changedAdjacents = {}
-		for (const neighbourKey of ['up', 'down', 'left', 'right']) {
-			const neighbour = neighbours[neighbourKey]
-			if ([undefined, RoomType.EDGE, RoomType.MUSTBEFILLED, RoomType.CANBEFILLED].includes(neighbour.room?.type)) {
-				changedAdjacents[neighbourKey] = {...neighbour, room: new BlockedRoom(neighbour.x, neighbour.y)}
+
+		// If there's at least one adjacent real room to me, turn everything else into blocked
+		if (neighbourRooms.filter(n => n.room?.type === RoomType.ROOM).length > 0) {
+
+			for (const [nKey, n] of Object.entries(neighbours)) {
+				if (![RoomType.ROOM].includes(n.room?.type)) {
+					changedAdjacents[nKey] = { x: n.x, y: n.y, room: new BlockedRoom(n.x, n.y) }
+				}
+				
 			}
 			
+		} else {
+		// Otherwise, I was probably spawned on an edge or next to a MUSTBEFILLED, so turn everything near me into a MUSTBEFILLED
+			for (const [nKey, n] of Object.entries(neighbours)) {
+				if (![RoomType.ROOM].includes(n.room?.type)) {
+					changedAdjacents[nKey] = { x: n.x, y: n.y, room: new MustBeFilledRoom(n.x, n.y) }
+				}
+				
+			}
 		}
 
 		return changedAdjacents

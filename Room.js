@@ -15,10 +15,10 @@ export class Room {
 		throw Error("Clone Not Implemented")
 	}
 
-	getChangedAdjacents() { return {} }
+	getChangedAdjacents(neighbours, x, y) { return {} }
 
 	// @param neighbours - {up, down, left, right}
-	okayWithNeighbours(neighbours) {
+	okayWithNeighbours(newNeighbours) {
 		throw Error("Okay with neighbours not implemented")
 	}
 

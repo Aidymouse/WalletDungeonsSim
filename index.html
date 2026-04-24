@@ -7,7 +7,7 @@
     window.generateWalletDungeon = () => {
       const d = new WalletDungeon(8);
 
-			showHistories(d);
+			//showHistories(d);
 	
       //drawDungeon(d);
     };
@@ -67,6 +67,27 @@
 		};
 	
 		window.onload = () => window.generateWalletDungeon()
+	
+		window.advanceChar = (e) => {
+			console.log("help")
+			const cycler = {
+				'.': '1',
+				'1': '2',
+				'2': '3',
+				'3': '4',
+				'4': '5',
+				'5': '6',
+				'6': '+',
+				'+': 'O',
+				'O': '^',
+				'^': 'X',
+				'X': '.',
+			}
+
+			const v = e.currentTarget.innerHTML.trim()
+			console.log(`"${v}"`)
+			e.currentTarget.innerHTML = cycler[v]
+		}
 
   </script>
   <link rel="stylesheet" href="main.css" />
@@ -78,6 +99,33 @@
       </button>
       <section id="histories">
       </section>
+			<section id="playground">
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+				<div class="playground-block" onclick="advanceChar(event)">.</div>
+			</section>
       <section>
         <canvas id="drawn" width="500" height="500"></canvas>
       </section>
