@@ -29,4 +29,16 @@ export class MustBeFilledRoom extends Room {
 			`${this.x-1}:${this.y}`,
 		]
 	}
+
+	okayToReplaceWith(dungein, replacementRoom) {
+		if (replacementRoom.type === RoomType.ROOM) { return true }
+
+		if (replacementRoom.type === RoomType.COULDBEFILLED) {
+			// First check, are any of my neighbours going to be left without enough spots to satisfy their constraints if this block isn't filled?
+		}
+
+		if (replacementRoom.type === RoomType.BLOCKED) {
+			// Same check as above
+		}
+	}
 }

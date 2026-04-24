@@ -24,4 +24,13 @@ export class Room {
 	clone() { 
 		throw Error("Clone Not Implemented")
 	}
+
+	placeSelfAt(dungeon, x, y) {
+		dungeon.setRoom(this, x, y);
+	}
+
+	okayToReplaceWith(dungeon, replacementRoom) {
+		// Am I okay to be replaced with the incoming room?
+	}
+
 }

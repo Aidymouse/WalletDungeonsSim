@@ -46,7 +46,7 @@ export class FiveRoom extends Room {
 			const mustBeFilledNeighbours = dungeon.neighboursOfType(this.x, this.y, [RoomType.MUSTBEFILLED])
 			for (const n of mustBeFilledNeighbours) {
 				dungeon.setRoom(new CanBeFilledRoom(), n.x, n.y);
-				dungeon.room(n.x, n.y).propagateChanges(dungeon);
+				prop_results = prop_results.concat(dungeon.room(n.x, n.y).propagateChanges(dungeon, prop_results));
 			}
 		}
 
